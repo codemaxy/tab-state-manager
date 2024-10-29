@@ -1,15 +1,43 @@
-import React, { FC, HTMLAttributes, ReactChild } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useTabStateManager } from './hooks/useTabStateManager';
+import type { StateManagerOptions } from './types';
 
-export interface Props extends HTMLAttributes<HTMLDivElement> {
-  /** custom content, defaults to 'the snozzberries taste like snozzberries' */
-  children?: ReactChild;
+interface TabStateContextValue<T> {
+  state: T;
+  setState: (update: Partial<T>) => void;
+  subscribe: (callback: (state: T) => void) => () => void;
 }
 
-// Please do not use types off of a default export module or else Storybook Docs will suffer.
-// see: https://github.com/storybookjs/storybook/issues/9556
-/**
- * A custom Thing component. Neat!
- */
-export const Thing: FC<Props> = ({ children }) => {
-  return <div>{children || `the snozzberries taste like snozzberries`}</div>;
-};
+const TabStateContext = createContext<TabStateContextValue<any> | null>(null);
+
+interface TabStateProviderProps<T extends Record<string, any>> {
+  children: ReactNode;
+  options: StateManagerOptions<T>;
+}
+
+export function TabStateProvider<T extends Record<string, any>>({ 
+  children, 
+  options 
+}: TabStateProviderProps<T>) {
+  const { getState, setState, subscribe } = useTabStateManager<T>(options);
+
+  const value = {
+    state: getState(),
+    setState,
+    subscribe,
+  };
+
+  return (
+    <TabStateContext.Provider value={value}>
+      {children}
+    </TabStateContext.Provider>
+  );
+}
+
+export function useTabState<T>() {
+  const context = useContext(TabStateContext);
+  if (!context) {
+    throw new Error('useTabState must be used within a TabStateProvider');
+  }
+  return context as TabStateContextValue<T>;
+}
