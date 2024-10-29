@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useTabStateManager } from '../hooks/useTabStateManager';
 import type { StateManagerOptions } from '../types';
 
@@ -20,9 +20,16 @@ export function TabStateProvider<T extends Record<string, any>>({
   options 
 }: TabStateProviderProps<T>) {
   const { getState, setState, subscribe } = useTabStateManager<T>(options);
+  const [state, setLocalState] = useState(getState());
+
+  useEffect(() => {
+    return subscribe((newState) => {
+      setLocalState(newState);
+    });
+  }, [subscribe]);
 
   const value = {
-    state: getState(),
+    state,
     setState,
     subscribe,
   };

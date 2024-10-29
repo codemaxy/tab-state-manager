@@ -51,9 +51,8 @@ export function useTabStateManager<T extends Record<string, any>>(
     }
   }, [options]);
 
-  // Message handling
-  const handleMessage = useCallback((event: MessageEvent<BroadcastMessage<T>>) => {
-    const message = event.data;
+  const handleMessage = useCallback((event: MessageEvent) => {
+    const message = event.data as BroadcastMessage<T>;
     if (message.sourceTabId === stateRef.current.tabId) return;
 
     try {
